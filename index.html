@@ -476,6 +476,10 @@
         }
         .detail-row .label { color: #d1d5db; }
         .detail-row .value { color: white; text-align: right; max-width: 60%; word-break: break-word; font-weight: 500; }
+
+        /* SUCCESS SCREEN UI */
+        #success-screen { background: var(--bg-dark); overflow-y: auto; display: none; flex-direction: column; }
+        #success-screen.active { display: flex; }
     </style>
 </head>
 <body>
@@ -738,9 +742,94 @@
         </div>
 
         <div style="padding: 0 20px; margin-top: auto; margin-bottom: calc(20px + var(--safe-bottom));">
-            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="document.getElementById('result-text').innerText = 'Payment Request Initialized!'; document.getElementById('result-sheet').classList.add('active'); setTimeout(() => document.getElementById('result-sheet').classList.remove('active'), 3000);">
+            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="processPayment()">
                 CONFIRM
             </button>
+        </div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div id="success-screen" class="screen">
+        <div class="payment-header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button style="background: transparent; border: none; color: white; cursor: pointer; padding: 0; display: flex;" onclick="finishTransaction()">
+                    <i data-lucide="arrow-left" size="24"></i>
+                </button>
+                <span>Transaction</span>
+            </div>
+            <div style="display: flex; gap: 16px;">
+                <i data-lucide="file-text" size="24" color="white"></i>
+                <i data-lucide="more-vertical" size="24" color="white"></i>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 20px; flex-grow: 1; overflow-y: auto;">
+            <div style="font-size: 1.05rem; font-weight: 600; margin-bottom: 20px; color: white;">Payment Successful !</div>
+            
+            <div style="background: #28a745; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);">
+                <i data-lucide="check" size="32" color="white" stroke-width="3"></i>
+            </div>
+            
+            <div style="font-size: 2.4rem; font-weight: 800; color: white; margin-bottom: 12px; letter-spacing: -1px;">
+                NPR <span id="success-amount">0.00</span>
+            </div>
+            
+            <div style="color: white; font-size: 0.95rem; margin-bottom: 8px;">
+                Paid for <span id="success-merchant" style="font-weight: 600;"></span>
+            </div>
+            
+            <div id="success-datetime" style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 24px;">
+                <!-- Time is populated here -->
+            </div>
+            
+            <div style="color: var(--primary-green); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 30px; cursor: pointer;">
+                View Details <i data-lucide="chevron-right" size="16"></i>
+            </div>
+
+            <!-- Action Cards -->
+            <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #25313d;">
+                <span style="color: white; font-weight: 500; font-size: 0.9rem;">Transaction Code</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: white; font-weight: 600; font-family: monospace; font-size: 1rem; letter-spacing: 0.5px;">6GZ5O7P</span>
+                    <i data-lucide="copy" size="16" color="var(--text-muted)"></i>
+                </div>
+            </div>
+
+            <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #25313d;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i data-lucide="scissors" size="20" color="var(--primary-green)"></i>
+                    <span style="color: white; font-weight: 500; font-size: 0.9rem;">Split payment with friends ?</span>
+                </div>
+                <i data-lucide="chevron-right" size="20" color="var(--text-muted)"></i>
+            </div>
+
+            <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #25313d; opacity: 0.6;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: var(--primary-green); border-radius: 50%; padding: 4px;">
+                        <i data-lucide="plus" size="16" color="black" stroke-width="3"></i>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="color: white; font-weight: 500; font-size: 0.9rem;">Add expense category</div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem;">This will help organize your expenses.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button style="width: 100%; background: var(--primary-green); color: black; font-weight: 800; font-size: 1.1rem; padding: 16px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer; margin-bottom: 20px;" onclick="finishTransaction()">
+                DONE
+            </button>
+
+            <!-- Ad Banner -->
+            <div style="background: white; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; text-align: left; margin-bottom: calc(20px + var(--safe-bottom));">
+                <div style="background: #e8f5e9; padding: 8px; border-radius: 50%;">
+                    <i data-lucide="heart-pulse" size="24" color="#2e7d32"></i>
+                </div>
+                <div>
+                    <div style="color: #2e7d32; font-weight: bold; font-size: 0.8rem; margin-bottom: 4px;">Sahara Health Insurance</div>
+                    <div style="color: black; font-weight: 800; font-size: 1.1rem;">Starting at Rs. 1,399</div>
+                    <div style="color: #666; font-size: 0.7rem;">(Coverage up to Rs. 6 lakhs)</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -911,6 +1000,42 @@
         function backToPayment() {
             document.getElementById('confirm-screen').classList.remove('active');
             document.getElementById('payment-screen').classList.add('active');
+        }
+
+        function processPayment() {
+            document.getElementById('confirm-screen').classList.remove('active');
+            document.getElementById('success-screen').classList.add('active');
+            
+            // Populate Data
+            document.getElementById('success-amount').innerText = document.getElementById('confirm-hero-amount').innerText;
+            document.getElementById('success-merchant').innerText = scannedMerchantName;
+            
+            // Format current Date and Time
+            const now = new Date();
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // convert '0' to '12'
+            const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+            
+            document.getElementById('success-datetime').innerText = `${day} ${month}, ${year} ${strTime}`;
+        }
+
+        function finishTransaction() {
+            // Reset input values for the next scan
+            document.getElementById('pay-input-amount').value = '';
+            document.getElementById('pay-input-remarks').value = '';
+
+            // Transition back to home
+            document.getElementById('success-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+            bottomNav.style.display = 'flex';
         }
     </script>
 </body>
