@@ -2,96 +2,621 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QR Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>QR Scanner Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b1118">
     
+    <!-- Library -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        body {
+        :root {
+            --primary-green: #70e463;
+            --bg-dark: #0b1118;
+            --card-bg: #1c2631;
+            --text-main: #ffffff;
+            --text-muted: #8e99a5;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #121212;
-            color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Screen Management */
+        .screen {
+            position: fixed;
+            inset: 0;
+            display: none;
             flex-direction: column;
+            background: var(--bg-dark);
+            z-index: 10;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* HOME SCREEN */
+        #home-screen {
+            padding: calc(15px + var(--safe-top)) 16px calc(80px + var(--safe-bottom));
+            overflow-y: auto;
+        }
+
+        /* Top Header */
+        .header {
+            display: flex;
             align-items: center;
-            height: 100vh;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .avatar-check {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #28a745;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-dark);
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+            opacity: 0.9;
+        }
+
+        /* Balance Card Section */
+        .balance-card {
+            background: #141b23;
+            border-radius: 16px;
+            border: 1px solid #25313d;
+            margin-bottom: 20px;
             overflow: hidden;
         }
 
-        #reader {
-            width: 100%;
-            height: 70vh;
-            background: black;
+        .balance-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #25313d;
         }
 
-        #result-container {
-            padding: 20px;
+        .balance-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .balance-val {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .balance-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 16px 8px;
             text-align: center;
-            width: 100%;
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            color: var(--text-main);
+        }
+
+        /* Category Card */
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px 16px;
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px 12px;
+        }
+
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .grid-item span {
+            font-size: 0.72rem;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .icon-box {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-green);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(65px + var(--safe-bottom));
+            background: #141b23;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: var(--safe-bottom);
+            z-index: 50;
+            border-top: 1px solid #25313d;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            width: 20%;
+        }
+
+        .nav-item.active { color: var(--text-main); }
+
+        .scan-btn-container {
+            position: relative;
+            top: -25px;
+            width: 68px;
+            height: 68px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            box-shadow: 0 4px 20px rgba(112, 228, 99, 0.4);
+            border: 5px solid var(--bg-dark);
+            cursor: pointer;
+        }
+
+        /* SCANNER SCREEN */
+        #scanner-screen { background: #000; position: relative; }
+        #reader { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+
+        .scanner-ui {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none; /* Let clicks pass through to camera if needed */
+        }
+
+        .scanner-ui > * {
+            pointer-events: auto; /* Re-enable clicks for UI elements */
+        }
+
+        /* Scanner Top Bar */
+        .scanner-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: calc(20px + var(--safe-top)) 20px 10px;
+            color: white;
+        }
+
+        .icon-btn-trans {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .icon-btn-white {
+            background: white;
+            border: none;
+            color: black;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Branding Area */
+        .scanner-branding {
+            text-align: center;
+            margin-top: 10px;
+            color: white;
+        }
+
+        .gallery-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+
+        /* Target Box Container */
+        .scanner-target-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: center;
+            gap: 30px;
         }
 
-        #scanned-result {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            margin-top: 10px;
-            word-break: break-all;
-            color: #4CAF50;
-            font-weight: bold;
+        .scanner-target-box {
+            width: 250px;
+            height: 250px;
+            border: 2px solid var(--primary-green);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Styling the internal library buttons */
-        button {
-            padding: 12px 24px !important;
-            background-color: #ffffff !important;
-            color: black !important;
-            border: none !important;
-            border-radius: 8px !important;
-            font-weight: bold !important;
-            margin: 10px 0 !important;
+        .laser-line {
+            width: 90%;
+            height: 2px;
+            background-color: #ff3b30; /* Red laser */
+            margin: 0 auto;
+            position: relative;
+            /* 0.5s duration alternate creates exactly 1Hz (1s full cycle) */
+            animation: moveLaser 0.5s linear infinite alternate; 
         }
+
+        @keyframes moveLaser {
+            0% { top: 5%; }
+            100% { top: 95%; }
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            display: flex;
+            background: #2c333a;
+            border-radius: 30px;
+            padding: 4px;
+        }
+
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .zoom-btn.active {
+            background: var(--primary-green);
+            color: black;
+        }
+
+        /* Bottom Dock */
+        .scanner-bottom-dock {
+            background: #151b22;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 24px calc(20px + var(--safe-bottom));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dock-tabs {
+            display: flex;
+            gap: 24px;
+        }
+
+        .dock-tab {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .dock-tab.active {
+            color: var(--primary-green);
+            border-bottom: 2px solid var(--primary-green);
+        }
+
+        .dock-up-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            cursor: pointer;
+        }
+
+        /* Result Sheet */
+        #result-sheet {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--card-bg);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            padding-bottom: calc(24px + var(--safe-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+        }
+        #result-sheet.active { transform: translateY(0); }
+
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-green { background: var(--primary-green); color: black; }
+        .btn-dark { background: #0b1118; color: white; }
+
+        #reader__dashboard, #reader__header { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="reader"></div>
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen active">
+        <div class="header">
+            <div class="profile-section">
+                <div class="avatar"><div class="avatar-check"></div></div>
+                <div style="font-size: 1.1rem; font-weight: 600;">Hi, Sampanna</div>
+            </div>
+            <div class="header-icons">
+                <i data-lucide="search" size="22"></i>
+                <i data-lucide="bell" size="22"></i>
+                <i data-lucide="bot" size="22"></i>
+            </div>
+        </div>
 
-    <div id="result-container">
-        <div style="font-size: 0.9rem; opacity: 0.6;">Ready to scan...</div>
-        <div id="scanned-result">No QR code detected</div>
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="balance-summary">
+                <div class="balance-group">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="wallet" size="18" color="white"></i>
+                        <span class="balance-val">NPR XXXX.XX</span>
+                    </div>
+                    <span class="balance-label">Balance</span>
+                </div>
+                <div style="width: 1px; height: 30px; background: #25313d;"></div>
+                <i data-lucide="eye-off" size="20" style="opacity: 0.6;"></i>
+                <div style="width: 1px; height: 30px; background: #25313d;"></div>
+                <div class="balance-group" style="text-align: right; align-items: flex-end;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="medal" size="18" color="white"></i>
+                        <span class="balance-val">XXXX.XX</span>
+                        <i data-lucide="chevron-right" size="14" color="var(--primary-green)"></i>
+                    </div>
+                    <span class="balance-label">Reward Points</span>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <div class="action-item"><i data-lucide="download" color="var(--primary-green)"></i><span>Load<br>Money</span></div>
+                <div class="action-item"><i data-lucide="upload" color="var(--primary-green)"></i><span>Send<br>Money</span></div>
+                <div class="action-item"><i data-lucide="landmark" color="var(--primary-green)"></i><span>Bank<br>Transfer</span></div>
+                <div class="action-item"><i data-lucide="refresh-ccw" color="var(--primary-green)"></i><span>Remittance</span></div>
+            </div>
+        </div>
+
+        <!-- Utilities -->
+        <div class="category-card">
+            <div class="category-title">Utility & Bill Payments</div>
+            <div class="icon-grid">
+                <div class="grid-item"><div class="icon-box"><i data-lucide="smartphone"></i></div><span>Topup<br>& Data</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="zap"></i></div><span>Electricity</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="droplet"></i></div><span>Khanepani</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="wifi"></i></div><span>Internet</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="landmark"></i></div><span>Govt.<br>Payment</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="traffic-light"></i></div><span>Traffic Fine<br>Payment</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="graduation-cap"></i></div><span>Education<br>Fee</span></div>
+                <div class="grid-item"><div class="icon-box" style="background: rgba(255,255,255,0.05); border-radius: 50%; width: 32px; height: 32px; margin-top: 8px;"><i data-lucide="chevron-right" size="18" color="white"></i></div></div>
+            </div>
+        </div>
+
+        <!-- Travels -->
+        <div class="category-card">
+            <div class="category-title">Travels & Ticketing</div>
+            <div class="icon-grid">
+                <div class="grid-item"><div class="icon-box"><i data-lucide="plane"></i></div><span>Airlines</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="globe"></i></div><span>Intl Airlines</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="hotel"></i></div><span>Hotels</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="bus"></i></div><span>Bus Ticket</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="clapperboard"></i></div><span>Movies</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="cable-car"></i></div><span>Cable Car</span></div>
+                <div class="grid-item"><div class="icon-box"><i data-lucide="calendar-days"></i></div><span>Events</span></div>
+                <div class="grid-item"><div class="icon-box" style="background: rgba(255,255,255,0.05); border-radius: 50%; width: 32px; height: 32px; margin-top: 8px;"><i data-lucide="chevron-right" size="18" color="white"></i></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCANNER SCREEN -->
+    <div id="scanner-screen" class="screen">
+        <div id="reader"></div>
+        
+        <div class="scanner-ui">
+            <!-- Top Bar -->
+            <div class="scanner-top">
+                <button class="icon-btn-trans"><i data-lucide="zap-off" size="24"></i></button>
+                <span style="font-weight: 600; font-size: 1.05rem;">Scan QR Code to Pay</span>
+                <button class="icon-btn-white" onclick="stopScanner()"><i data-lucide="x" size="20" stroke-width="3"></i></button>
+            </div>
+
+            <!-- Branding -->
+            <div class="scanner-branding">
+                <div style="font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    नगद छोडौं <i data-lucide="smartphone" size="24"></i>
+                </div>
+                <div style="font-size: 1.5rem; font-weight: bold; margin: 8px 0 20px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span style="background: #e31837; color: white; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-style: italic;">fonepay</span> गरौं
+                </div>
+                <button class="gallery-btn">
+                    <i data-lucide="qr-code" size="18"></i> ADD QR CODE FROM G...
+                </button>
+            </div>
+
+            <!-- Target Box & Zoom -->
+            <div class="scanner-target-container">
+                <div class="scanner-target-box">
+                    <div class="laser-line"></div>
+                </div>
+                
+                <div class="zoom-controls">
+                    <div class="zoom-btn active">1X</div>
+                    <div class="zoom-btn">2</div>
+                    <div class="zoom-btn">3</div>
+                </div>
+            </div>
+
+            <!-- Bottom Dock -->
+            <div class="scanner-bottom-dock">
+                <div class="dock-tabs">
+                    <div class="dock-tab active">My QR</div>
+                    <div class="dock-tab">Favorite QR</div>
+                </div>
+                <div class="dock-up-btn">
+                    <i data-lucide="chevron-up" size="24" stroke-width="3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <div class="nav-item active">
+            <i data-lucide="home" size="24"></i>
+            <span>Home</span>
+        </div>
+        <div class="nav-item">
+            <i data-lucide="file-text" size="24"></i>
+            <span>Statement</span>
+        </div>
+        <div class="scan-btn-container" onclick="startScanner()">
+            <i data-lucide="qr-code" size="30"></i>
+        </div>
+        <div class="nav-item">
+            <i data-lucide="message-circle-question" size="24"></i>
+            <span>Support</span>
+        </div>
+        <div class="nav-item">
+            <i data-lucide="layout-grid" size="24"></i>
+            <span>More</span>
+        </div>
+    </nav>
+
+    <!-- RESULT SHEET -->
+    <div id="result-sheet">
+        <div style="width: 40px; height: 4px; background: #444; border-radius: 2px; margin: 0 auto 20px;"></div>
+        <h3 style="margin: 0 0 8px;">Payment Found</h3>
+        <p id="result-text" style="word-break: break-all; opacity: 0.8; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;"></p>
+        <button id="open-btn" class="btn btn-green">Proceed to Pay</button>
+        <button class="btn btn-dark" onclick="closeSheet()">Cancel</button>
     </div>
 
     <script>
-        const scanner = new Html5QrcodeScanner("reader", { 
-            fps: 15, 
-            qrbox: { width: 250, height: 250 },
-            rememberLastUsedCamera: true,
-            aspectRatio: 1.0
-        });
+        lucide.createIcons();
+        
+        let html5QrCode = null;
+        const sheet = document.getElementById('result-sheet');
 
-        function onScanSuccess(decodedText, decodedResult) {
-            document.getElementById('scanned-result').innerText = decodedText;
-            
-            // If it's a URL, give the user the option to open it
-            if (decodedText.startsWith('http')) {
-                if (confirm("Open link in browser?\n" + decodedText)) {
-                    window.location.href = decodedText;
+        async function startScanner() {
+            document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('scanner-screen').classList.add('active');
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                if (cameras.length) {
+                    const back = cameras.find(c => c.label.toLowerCase().includes('back')) || cameras[0];
+                    await html5QrCode.start(back.id, config, onScanSuccess);
                 }
-            }
+            } catch (e) { alert("Camera access required"); stopScanner(); }
         }
 
-        scanner.render(onScanSuccess);
+        async function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) await html5QrCode.stop();
+            document.getElementById('scanner-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+        }
+
+        function onScanSuccess(decodedText) {
+            if (window.navigator.vibrate) window.navigator.vibrate(100);
+            document.getElementById('result-text').innerText = decodedText;
+            document.getElementById('open-btn').onclick = () => window.location.href = decodedText;
+            sheet.classList.add('active');
+        }
+
+        function closeSheet() { sheet.classList.remove('active'); }
     </script>
 </body>
 </html>
