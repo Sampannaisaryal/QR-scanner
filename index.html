@@ -910,34 +910,54 @@
         async function onScanSuccess(decodedText) {
             if (window.navigator.vibrate) window.navigator.vibrate(100);
             
-            // Fonepay String Validation Check
-            if (decodedText.includes('fonepay.com')) {
-                // Success: Valid Fonepay
+            // Validation Flags
+            let isFonepay = decodedText.includes('fonepay.com');
+            let isEsewa = false;
+            let esewaData = null;
+
+            // eSewa JSON Validation Check
+            try {
+                if (decodedText.includes('eSewa_id')) {
+                    esewaData = JSON.parse(decodedText);
+                    if (esewaData && esewaData.eSewa_id && esewaData.name) {
+                        isEsewa = true;
+                    }
+                }
+            } catch(e) {
+                console.log("Not a valid JSON eSewa QR");
+            }
+            
+            if (isFonepay || isEsewa) {
+                // Success: Valid Fonepay or eSewa
                 await stopCameraOnly();
                 document.getElementById('scanner-screen').classList.remove('active');
                 document.getElementById('payment-screen').classList.add('active');
                 bottomNav.style.display = 'none';
                 
-                // Parse Merchant Data based on user instruction (approx. boundaries) and EMVCo spec
                 let merchantName = "Unknown Merchant";
                 let merchantId = "Unknown ID";
                 
-                try {
-                    // Try exact standard EMV tag parsing first
-                    let tag59Match = decodedText.match(/59(\d{2})(.{1,50})60/);
-                    if (tag59Match) {
-                        let length = parseInt(tag59Match[1]);
-                        merchantName = tag59Match[2].substring(0, length);
-                    } else {
-                        // Fallback to literal slicing logic specifically requested (adapted to payload length)
-                        merchantName = decodedText.slice(114, decodedText.length - 62);
-                    }
-                    
-                    let idMatch = decodedText.match(/201130(\d{4,10})/);
-                    if (idMatch) {
-                        merchantId = "201130" + idMatch[1];
-                    }
-                } catch(e) {}
+                if (isFonepay) {
+                    // Parse Fonepay Data
+                    try {
+                        let tag59Match = decodedText.match(/59(\d{2})(.{1,50})60/);
+                        if (tag59Match) {
+                            let length = parseInt(tag59Match[1]);
+                            merchantName = tag59Match[2].substring(0, length);
+                        } else {
+                            merchantName = decodedText.slice(114, decodedText.length - 62);
+                        }
+                        
+                        let idMatch = decodedText.match(/201130(\d{4,10})/);
+                        if (idMatch) {
+                            merchantId = "201130" + idMatch[1];
+                        }
+                    } catch(e) {}
+                } else if (isEsewa) {
+                    // Parse eSewa Data
+                    merchantName = esewaData.name;
+                    merchantId = esewaData.eSewa_id;
+                }
                 
                 scannedMerchantName = merchantName;
                 scannedMerchantId = merchantId;
@@ -949,7 +969,7 @@
                 // Prevent duplicate popups if sheet is already active
                 if (sheet.classList.contains('active')) return;
                 
-                document.getElementById('result-text').innerText = "Please scan a valid Fonepay QR code.\n\nScanned Data:\n" + decodedText;
+                document.getElementById('result-text').innerText = "Please scan a valid Fonepay or eSewa QR code.\n\nScanned Data:\n" + decodedText;
                 sheet.classList.add('active');
                 
                 // Auto dismiss the error after 4 seconds to let them try again seamlessly
