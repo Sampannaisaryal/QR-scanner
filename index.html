@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QR Scanner</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #reader {
+            width: 100%;
+            height: 70vh;
+            background: black;
+        }
+
+        #result-container {
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #scanned-result {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-top: 10px;
+            word-break: break-all;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Styling the internal library buttons */
+        button {
+            padding: 12px 24px !important;
+            background-color: #ffffff !important;
+            color: black !important;
+            border: none !important;
+            border-radius: 8px !important;
+            font-weight: bold !important;
+            margin: 10px 0 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="reader"></div>
+
+    <div id="result-container">
+        <div style="font-size: 0.9rem; opacity: 0.6;">Ready to scan...</div>
+        <div id="scanned-result">No QR code detected</div>
+    </div>
+
+    <script>
+        const scanner = new Html5QrcodeScanner("reader", { 
+            fps: 15, 
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true,
+            aspectRatio: 1.0
+        });
+
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById('scanned-result').innerText = decodedText;
+            
+            // If it's a URL, give the user the option to open it
+            if (decodedText.startsWith('http')) {
+                if (confirm("Open link in browser?\n" + decodedText)) {
+                    window.location.href = decodedText;
+                }
+            }
+        }
+
+        scanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
