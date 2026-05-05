@@ -641,7 +641,7 @@
                     <div style="position: absolute; bottom: 6px; right: 6px; background: var(--primary-green); width: 8px; height: 8px; border-radius: 50%;"></div>
                 </div>
                 <div>
-                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Payment for Merchant</div>
+                    <div id="pay-merchant-label" style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Payment for Merchant</div>
                     <div id="pay-merchant-name" style="color: white; font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px;">Merchant Name</div>
                     <div id="pay-merchant-id" style="color: white; font-size: 0.85rem; opacity: 0.8;">ID</div>
                 </div>
@@ -666,8 +666,8 @@
                 <input type="text" id="pay-input-remarks" class="pay-input" placeholder="Write remarks...">
             </div>
 
-            <!-- Category -->
-            <div style="border-top: 1px solid #25313d; padding-top: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <!-- Category (Conditionally Hidden for eSewa) -->
+            <div id="pay-category-section" style="border-top: 1px solid #25313d; padding-top: 20px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <i data-lucide="wrench" size="24" color="var(--primary-green)"></i>
                     <div>
@@ -722,11 +722,11 @@
         <div style="padding: 0 20px 20px;">
             <div style="font-weight: 600; font-size: 1.05rem; color: white; margin-bottom: 24px;">Payment Details</div>
             
-            <div class="detail-row"><span class="label">Merchant Name:</span><span class="value" id="confirm-merchant-name"></span></div>
-            <div class="detail-row"><span class="label">Merchant Code:</span><span class="value" id="confirm-merchant-id"></span></div>
+            <div class="detail-row"><span class="label" id="confirm-label-name">Merchant Name:</span><span class="value" id="confirm-merchant-name"></span></div>
+            <div class="detail-row"><span class="label" id="confirm-label-id">Merchant Code:</span><span class="value" id="confirm-merchant-id"></span></div>
             <div class="detail-row"><span class="label">Amount (NPR)</span><span class="value" id="confirm-amount"></span></div>
             <div class="detail-row"><span class="label">Remarks:</span><span class="value" id="confirm-remarks"></span></div>
-            <div class="detail-row"><span class="label">Purpose of payment</span><span class="value">Maintenance<br>Services</span></div>
+            <div class="detail-row"><span class="label">Purpose of payment</span><span class="value" id="confirm-purpose-value">Maintenance<br>Services</span></div>
         </div>
 
         <!-- Bill -->
@@ -876,6 +876,7 @@
         
         let scannedMerchantName = "";
         let scannedMerchantId = "";
+        let currentScanType = ""; // 'fonepay' or 'esewa'
 
         async function startScanner() {
             document.getElementById('home-screen').classList.remove('active');
@@ -936,7 +937,10 @@
                 
                 let merchantName = "Unknown Merchant";
                 let merchantId = "Unknown ID";
+                currentScanType = isFonepay ? 'fonepay' : 'esewa';
                 
+                const categorySection = document.getElementById('pay-category-section');
+
                 if (isFonepay) {
                     // Parse Fonepay Data
                     try {
@@ -953,10 +957,17 @@
                             merchantId = "201130" + idMatch[1];
                         }
                     } catch(e) {}
+
+                    categorySection.style.display = 'flex';
+                    document.getElementById('pay-merchant-label').innerText = "Payment for Merchant";
+
                 } else if (isEsewa) {
                     // Parse eSewa Data
                     merchantName = esewaData.name;
                     merchantId = esewaData.eSewa_id;
+                    
+                    categorySection.style.display = 'none';
+                    document.getElementById('pay-merchant-label').innerText = "Payment for User";
                 }
                 
                 scannedMerchantName = merchantName;
@@ -1003,6 +1014,17 @@
             // Format data
             const amountVal = parseFloat(amountInput).toFixed(2);
             const remarksVal = document.getElementById('pay-input-remarks').value || 'test';
+
+            // Configure labels dynamically based on Scan Type
+            if (currentScanType === 'esewa') {
+                document.getElementById('confirm-label-name').innerText = "User's Name:";
+                document.getElementById('confirm-label-id').innerText = "Esewa id:";
+                document.getElementById('confirm-purpose-value').innerText = "Bill Sharing";
+            } else {
+                document.getElementById('confirm-label-name').innerText = "Merchant Name:";
+                document.getElementById('confirm-label-id').innerText = "Merchant Code:";
+                document.getElementById('confirm-purpose-value').innerHTML = "Maintenance<br>Services";
+            }
 
             // Populate Confirm Screen elements
             document.getElementById('confirm-hero-amount').innerText = amountVal;
