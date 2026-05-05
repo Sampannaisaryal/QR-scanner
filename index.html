@@ -1113,7 +1113,7 @@
                 const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
                 
                 document.getElementById('success-datetime').innerText = `${day} ${month}, ${year} ${strTime}`;
-            }, 1500); // 1.5 seconds delay
+            }, 1000); //  second delay
         }
 
         function finishTransaction() {
