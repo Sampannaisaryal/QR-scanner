@@ -423,6 +423,45 @@
         .btn-dark { background: #0b1118; color: white; border: 1px solid #25313d;}
 
         #reader__dashboard, #reader__header { display: none !important; }
+
+        /* PAYMENT SCREEN NEW UI */
+        #payment-screen { background: var(--bg-dark); overflow-y: auto; display: none; flex-direction: column; }
+        #payment-screen.active { display: flex; }
+
+        .payment-header {
+            display: flex;
+            align-items: center;
+            padding: calc(15px + var(--safe-top)) 20px 15px;
+            color: white;
+            font-size: 1.15rem;
+            font-weight: 600;
+        }
+
+        .pay-balance-card {
+            background: var(--card-bg);
+            margin: 10px 20px 20px;
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pay-form-card {
+            background: var(--card-bg);
+            margin: 0 20px 20px;
+            border-radius: 20px;
+            padding: 24px 20px;
+            position: relative;
+        }
+
+        .pay-input {
+            width: 100%; background: #141b23; border: 1px solid #25313d; 
+            border-radius: 12px; padding: 16px; color: white; 
+            font-size: 1rem; box-sizing: border-box; outline: none; margin-top: 8px;
+        }
+        
+        .pay-input:focus { border-color: var(--primary-green); }
     </style>
 </head>
 <body>
@@ -555,30 +594,84 @@
 
     <!-- PAYMENT SUCCESS / DETAILS SCREEN -->
     <div id="payment-screen" class="screen">
-        <div class="header" style="padding: calc(15px + var(--safe-top)) 16px 0;">
-            <button class="back-arrow" style="position: static; background: rgba(255,255,255,0.1); border-radius: 50%; padding: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; color: white;" onclick="backToHome()">
-                <i data-lucide="arrow-left" size="20"></i>
+        <div class="payment-header">
+            <button style="background: transparent; border: none; color: white; margin-right: 16px; cursor: pointer; display: flex; padding: 0;" onclick="backToHome()">
+                <i data-lucide="arrow-left" size="24"></i>
             </button>
-            <div style="font-weight: 600; font-size: 1.1rem; flex-grow: 1; text-align: center; margin-right: 40px;">Payment Details</div>
+            <span>Scan & Pay</span>
         </div>
-        <div style="padding: 30px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1;">
-            <div style="background: var(--primary-green); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(112, 228, 99, 0.4);">
-                <i data-lucide="check" size="40" color="black" stroke-width="3"></i>
+
+        <div class="pay-balance-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="position: relative;">
+                    <i data-lucide="wallet" size="24" color="var(--primary-green)"></i>
+                    <div style="position: absolute; right: -2px; bottom: 0; background: var(--primary-green); width: 6px; height: 6px; border-radius: 50%;"></div>
+                </div>
+                <div>
+                    <div style="color: white; font-weight: bold; font-size: 1rem;">NPR XXXX.XX</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem;">Balance</div>
+                </div>
             </div>
-            <h2 style="margin: 0 0 10px;">Fonepay Detected!</h2>
-            <p style="color: var(--text-muted); text-align: center; margin-bottom: 30px;">Processing secure gateway payload...</p>
-            
-            <div style="background: var(--card-bg); width: 100%; border-radius: 16px; padding: 16px; box-sizing: border-box; border: 1px solid #25313d; margin-bottom: auto; text-align: left;">
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; font-weight: bold;">Raw Fonepay Payload</div>
-                <div id="payment-raw-data" style="font-family: monospace; font-size: 0.85rem; word-break: break-all; color: var(--text-main); line-height: 1.4;"></div>
+            <i data-lucide="refresh-cw" size="20" color="white"></i>
+        </div>
+
+        <div class="pay-form-card">
+            <!-- Merchant Info -->
+            <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;">
+                <div style="background: rgba(255,255,255,0.05); padding: 8px; border-radius: 12px; position: relative;">
+                    <i data-lucide="qr-code" size="24" color="white"></i>
+                    <div style="position: absolute; bottom: 6px; right: 6px; background: var(--primary-green); width: 8px; height: 8px; border-radius: 50%;"></div>
+                </div>
+                <div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 4px;">Payment for Merchant</div>
+                    <div id="pay-merchant-name" style="color: white; font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.5px;">Merchant Name</div>
+                    <div id="pay-merchant-id" style="color: white; font-size: 0.85rem; opacity: 0.8;">ID</div>
+                </div>
             </div>
 
-            <button class="btn btn-green" style="margin-bottom: calc(20px + var(--safe-bottom));" onclick="backToHome()">Done</button>
+            <!-- Divider with Heart -->
+            <div style="height: 1px; background: #25313d; margin: 28px 0; position: relative;">
+                <div style="position: absolute; right: 10px; top: -24px; background: var(--primary-green); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(112, 228, 99, 0.3);">
+                    <i data-lucide="heart" size="24" color="white" fill="transparent"></i>
+                </div>
+            </div>
+
+            <!-- Amount Input -->
+            <div style="margin-bottom: 20px;">
+                <label style="color: white; font-size: 0.9rem; font-weight: 600;">Amount (NPR)</label>
+                <input type="number" class="pay-input" placeholder="">
+            </div>
+
+            <!-- Remarks Input -->
+            <div style="margin-bottom: 28px;">
+                <label style="color: white; font-size: 0.9rem; font-weight: 600;">Remarks</label>
+                <input type="text" class="pay-input" placeholder="Write remarks...">
+            </div>
+
+            <!-- Category -->
+            <div style="border-top: 1px solid #25313d; padding-top: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <i data-lucide="wrench" size="24" color="var(--primary-green)"></i>
+                    <div>
+                        <div style="color: white; font-weight: 600; font-size: 0.95rem;">Maintenance Services</div>
+                        <div style="color: var(--text-muted); font-size: 0.75rem;">This will help organize your expen...</div>
+                    </div>
+                </div>
+                <div style="color: white; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    Change <i data-lucide="chevron-right" size="16"></i>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 0 20px; margin-top: auto; margin-bottom: calc(20px + var(--safe-bottom));">
+            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="backToHome()">
+                PROCEED
+            </button>
         </div>
     </div>
 
     <!-- BOTTOM NAV -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="main-bottom-nav">
         <div class="nav-item active">
             <i data-lucide="home" size="24"></i>
             <span>Home</span>
@@ -616,10 +709,12 @@
         
         let html5QrCode = null;
         const sheet = document.getElementById('result-sheet');
+        const bottomNav = document.getElementById('main-bottom-nav');
 
         async function startScanner() {
             document.getElementById('home-screen').classList.remove('active');
             document.getElementById('scanner-screen').classList.add('active');
+            bottomNav.style.display = 'none';
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             
             const config = { fps: 20 }; 
@@ -643,6 +738,7 @@
             await stopCameraOnly();
             document.getElementById('scanner-screen').classList.remove('active');
             document.getElementById('home-screen').classList.add('active');
+            bottomNav.style.display = 'flex';
         }
 
         async function onScanSuccess(decodedText) {
@@ -654,9 +750,31 @@
                 await stopCameraOnly();
                 document.getElementById('scanner-screen').classList.remove('active');
                 document.getElementById('payment-screen').classList.add('active');
+                bottomNav.style.display = 'none';
                 
-                // Display the raw payload on the payment page
-                document.getElementById('payment-raw-data').innerText = decodedText;
+                // Parse Merchant Data based on user instruction (approx. boundaries) and EMVCo spec
+                let merchantName = "Unknown Merchant";
+                let merchantId = "Unknown ID";
+                
+                try {
+                    // Try exact standard EMV tag parsing first
+                    let tag59Match = decodedText.match(/59(\d{2})(.{1,50})60/);
+                    if (tag59Match) {
+                        let length = parseInt(tag59Match[1]);
+                        merchantName = tag59Match[2].substring(0, length);
+                    } else {
+                        // Fallback to literal slicing logic specifically requested (adapted to payload length)
+                        merchantName = decodedText.slice(114, decodedText.length - 62);
+                    }
+                    
+                    let idMatch = decodedText.match(/201130(\d{4,10})/);
+                    if (idMatch) {
+                        merchantId = "201130" + idMatch[1];
+                    }
+                } catch(e) {}
+                
+                document.getElementById('pay-merchant-name').innerText = merchantName;
+                document.getElementById('pay-merchant-id').innerText = merchantId;
             } else {
                 // Error: Not Supported
                 // Prevent duplicate popups if sheet is already active
@@ -679,6 +797,7 @@
         function backToHome() {
             document.getElementById('payment-screen').classList.remove('active');
             document.getElementById('home-screen').classList.add('active');
+            bottomNav.style.display = 'flex';
         }
     </script>
 </body>
