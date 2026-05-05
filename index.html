@@ -234,7 +234,7 @@
 
         /* SCANNER SCREEN */
         #scanner-screen { background: #000; position: relative; }
-        #reader { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+        #reader { position: absolute; inset: 0; width: 100% !important; height: 100% !important; z-index: 1; }
         #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
 
         .scanner-ui {
@@ -319,6 +319,7 @@
             border-radius: 20px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
         }
 
         .laser-line {
@@ -593,7 +594,10 @@
             document.getElementById('home-screen').classList.remove('active');
             document.getElementById('scanner-screen').classList.add('active');
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 20, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            
+            // REMOVED 'qrbox' FROM CONFIG to remove the duplicate inner box
+            const config = { fps: 20 }; 
+            
             try {
                 const cameras = await Html5Qrcode.getCameras();
                 if (cameras.length) {
