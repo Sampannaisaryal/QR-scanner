@@ -480,6 +480,34 @@
         /* SUCCESS SCREEN UI */
         #success-screen { background: var(--bg-dark); overflow-y: auto; display: none; flex-direction: column; }
         #success-screen.active { display: flex; }
+
+        /* LOADING OVERLAY */
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 17, 24, 0.75);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #loading-overlay.active { display: flex; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(112, 228, 99, 0.2);
+            border-top-color: var(--primary-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -742,10 +770,17 @@
         </div>
 
         <div style="padding: 0 20px; margin-top: auto; margin-bottom: calc(20px + var(--safe-bottom));">
-            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="processPayment()">
+            <button id="btn-confirm-payment" style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="processPayment()">
                 CONFIRM
             </button>
         </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="color: white; font-weight: 600; font-size: 1.1rem;">Processing Payment...</div>
+        <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">Please do not close the app</div>
     </div>
 
     <!-- SUCCESS SCREEN -->
@@ -1045,28 +1080,40 @@
         }
 
         function processPayment() {
-            document.getElementById('confirm-screen').classList.remove('active');
-            document.getElementById('success-screen').classList.add('active');
+            // Disable confirm button to prevent double clicks and show loading overlay
+            const btn = document.getElementById('btn-confirm-payment');
+            btn.disabled = true;
+            document.getElementById('loading-overlay').classList.add('active');
             
-            // Populate Data
-            document.getElementById('success-amount').innerText = document.getElementById('confirm-hero-amount').innerText;
-            document.getElementById('success-merchant').innerText = scannedMerchantName;
-            
-            // Format current Date and Time
-            const now = new Date();
-            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = months[now.getMonth()];
-            const year = now.getFullYear();
-            
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12; // convert '0' to '12'
-            const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
-            
-            document.getElementById('success-datetime').innerText = `${day} ${month}, ${year} ${strTime}`;
+            setTimeout(() => {
+                // Re-enable button and hide loading overlay
+                btn.disabled = false;
+                document.getElementById('loading-overlay').classList.remove('active');
+                
+                // Screen transition
+                document.getElementById('confirm-screen').classList.remove('active');
+                document.getElementById('success-screen').classList.add('active');
+                
+                // Populate Data
+                document.getElementById('success-amount').innerText = document.getElementById('confirm-hero-amount').innerText;
+                document.getElementById('success-merchant').innerText = scannedMerchantName;
+                
+                // Format current Date and Time
+                const now = new Date();
+                const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = months[now.getMonth()];
+                const year = now.getFullYear();
+                
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // convert '0' to '12'
+                const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+                
+                document.getElementById('success-datetime').innerText = `${day} ${month}, ${year} ${strTime}`;
+            }, 1500); // 1.5 seconds delay
         }
 
         function finishTransaction() {
