@@ -462,6 +462,20 @@
         }
         
         .pay-input:focus { border-color: var(--primary-green); }
+
+        /* NEW CONFIRM SCREEN UI */
+        #confirm-screen { background: var(--bg-dark); overflow-y: auto; display: none; flex-direction: column; }
+        #confirm-screen.active { display: flex; }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .detail-row .label { color: #d1d5db; }
+        .detail-row .value { color: white; text-align: right; max-width: 60%; word-break: break-word; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -639,13 +653,13 @@
             <!-- Amount Input -->
             <div style="margin-bottom: 20px;">
                 <label style="color: white; font-size: 0.9rem; font-weight: 600;">Amount (NPR)</label>
-                <input type="number" class="pay-input" placeholder="">
+                <input type="number" id="pay-input-amount" class="pay-input" placeholder="">
             </div>
 
             <!-- Remarks Input -->
             <div style="margin-bottom: 28px;">
                 <label style="color: white; font-size: 0.9rem; font-weight: 600;">Remarks</label>
-                <input type="text" class="pay-input" placeholder="Write remarks...">
+                <input type="text" id="pay-input-remarks" class="pay-input" placeholder="Write remarks...">
             </div>
 
             <!-- Category -->
@@ -664,8 +678,68 @@
         </div>
 
         <div style="padding: 0 20px; margin-top: auto; margin-bottom: calc(20px + var(--safe-bottom));">
-            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="backToHome()">
+            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="goToConfirmScreen()">
                 PROCEED
+            </button>
+        </div>
+    </div>
+
+    <!-- CONFIRM SCREEN -->
+    <div id="confirm-screen" class="screen">
+        <div class="payment-header">
+            <button style="background: transparent; border: none; color: white; margin-right: 16px; cursor: pointer; display: flex; padding: 0;" onclick="backToPayment()">
+                <i data-lucide="arrow-left" size="24"></i>
+            </button>
+            <span>Scan & Pay</span>
+        </div>
+
+        <div class="pay-balance-card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="position: relative;">
+                    <i data-lucide="wallet" size="24" color="var(--primary-green)"></i>
+                    <div style="position: absolute; right: -2px; bottom: 0; background: var(--primary-green); width: 6px; height: 6px; border-radius: 50%;"></div>
+                </div>
+                <div>
+                    <div style="color: white; font-weight: bold; font-size: 1rem;">NPR XXXX.XX</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem;">Balance</div>
+                </div>
+            </div>
+            <i data-lucide="refresh-cw" size="20" color="white"></i>
+        </div>
+
+        <!-- Hero Card -->
+        <div style="background: #0b0f14; margin: 0 20px 20px; padding: 32px 20px; border-radius: 20px; text-align: center; border: 1px solid #1a222a;">
+            <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">You are paying</div>
+            <div style="color: var(--primary-green); font-size: 2.8rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px;">NPR <span id="confirm-hero-amount">0.00</span></div>
+            <div style="color: white; font-size: 0.9rem; font-weight: 600;">Scan & Pay</div>
+        </div>
+
+        <!-- Details -->
+        <div style="padding: 0 20px 20px;">
+            <div style="font-weight: 600; font-size: 1.05rem; color: white; margin-bottom: 24px;">Payment Details</div>
+            
+            <div class="detail-row"><span class="label">Merchant Name:</span><span class="value" id="confirm-merchant-name"></span></div>
+            <div class="detail-row"><span class="label">Merchant Code:</span><span class="value" id="confirm-merchant-id"></span></div>
+            <div class="detail-row"><span class="label">Amount (NPR)</span><span class="value" id="confirm-amount"></span></div>
+            <div class="detail-row"><span class="label">Remarks:</span><span class="value" id="confirm-remarks"></span></div>
+            <div class="detail-row"><span class="label">Purpose of payment</span><span class="value">Maintenance<br>Services</span></div>
+        </div>
+
+        <!-- Bill -->
+        <div style="background: #1c2631; margin: 0 20px 20px; padding: 20px; border-radius: 20px; position: relative; overflow: hidden;">
+            <div style="position: absolute; right: -10px; top: -10px; opacity: 0.03; color: white;">
+                <i data-lucide="sun" size="120"></i>
+            </div>
+            <div style="font-weight: 600; font-size: 0.95rem; color: white; margin-bottom: 16px; position: relative; z-index: 1;">Your Bill</div>
+            <div class="detail-row" style="margin-bottom: 0; font-weight: bold; position: relative; z-index: 1;">
+                <span class="label" style="color: white;">Total Paying Amount</span>
+                <span class="value" id="confirm-total-amount"></span>
+            </div>
+        </div>
+
+        <div style="padding: 0 20px; margin-top: auto; margin-bottom: calc(20px + var(--safe-bottom));">
+            <button style="width: 100%; background: var(--primary-green); color: white; font-weight: bold; font-size: 1.1rem; padding: 18px; border-radius: 12px; border: none; letter-spacing: 1px; cursor: pointer;" onclick="document.getElementById('result-text').innerText = 'Payment Request Initialized!'; document.getElementById('result-sheet').classList.add('active'); setTimeout(() => document.getElementById('result-sheet').classList.remove('active'), 3000);">
+                CONFIRM
             </button>
         </div>
     </div>
@@ -710,6 +784,9 @@
         let html5QrCode = null;
         const sheet = document.getElementById('result-sheet');
         const bottomNav = document.getElementById('main-bottom-nav');
+        
+        let scannedMerchantName = "";
+        let scannedMerchantId = "";
 
         async function startScanner() {
             document.getElementById('home-screen').classList.remove('active');
@@ -773,6 +850,9 @@
                     }
                 } catch(e) {}
                 
+                scannedMerchantName = merchantName;
+                scannedMerchantId = merchantId;
+                
                 document.getElementById('pay-merchant-name').innerText = merchantName;
                 document.getElementById('pay-merchant-id').innerText = merchantId;
             } else {
@@ -798,6 +878,39 @@
             document.getElementById('payment-screen').classList.remove('active');
             document.getElementById('home-screen').classList.add('active');
             bottomNav.style.display = 'flex';
+        }
+
+        function goToConfirmScreen() {
+            const amountInput = document.getElementById('pay-input-amount').value;
+            
+            // Validate input
+            if (!amountInput || amountInput <= 0) {
+                document.getElementById('result-text').innerText = "Please enter a valid amount to proceed.";
+                sheet.classList.add('active');
+                setTimeout(() => closeSheet(), 3000);
+                return;
+            }
+
+            // Format data
+            const amountVal = parseFloat(amountInput).toFixed(2);
+            const remarksVal = document.getElementById('pay-input-remarks').value || 'test';
+
+            // Populate Confirm Screen elements
+            document.getElementById('confirm-hero-amount').innerText = amountVal;
+            document.getElementById('confirm-merchant-name').innerText = scannedMerchantName;
+            document.getElementById('confirm-merchant-id').innerText = scannedMerchantId;
+            document.getElementById('confirm-amount').innerText = amountVal;
+            document.getElementById('confirm-remarks').innerText = remarksVal;
+            document.getElementById('confirm-total-amount').innerText = amountVal;
+
+            // Transition Screen
+            document.getElementById('payment-screen').classList.remove('active');
+            document.getElementById('confirm-screen').classList.add('active');
+        }
+
+        function backToPayment() {
+            document.getElementById('confirm-screen').classList.remove('active');
+            document.getElementById('payment-screen').classList.add('active');
         }
     </script>
 </body>
